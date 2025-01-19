@@ -1,9 +1,13 @@
 package com.sagar.pet_clinic.controller;
 
 import com.sagar.pet_clinic.dto.AppointmentRequestDto;
+import com.sagar.pet_clinic.dto.AppointmentResponseDto;
 import com.sagar.pet_clinic.service.AppointmentService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/appointments")
@@ -17,17 +21,21 @@ public class AppointmentController {
 
     @PostMapping
     public ResponseEntity<?> createAppointment(@RequestBody AppointmentRequestDto requestDto){
-        return appointmentService.createAppointment(requestDto);
+        AppointmentResponseDto appointment = appointmentService.createAppointment(requestDto);
+        return ResponseEntity.status(HttpStatus.OK).body(appointment);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getAppointment(@PathVariable Integer id){
-        return appointmentService.getAppointment(id);
+        AppointmentResponseDto appointment = appointmentService.getAppointment(id);
+        return ResponseEntity.status(HttpStatus.OK).body(appointment);
     }
 
     @GetMapping
     public ResponseEntity<?> getAllAppointments(){
-        return appointmentService.getAllAppointments();
+        List<AppointmentResponseDto> allAppointments = appointmentService.getAllAppointments();
+        return ResponseEntity.status(HttpStatus.OK).body(allAppointments);
+
     }
 
     @PutMapping("/{id}")

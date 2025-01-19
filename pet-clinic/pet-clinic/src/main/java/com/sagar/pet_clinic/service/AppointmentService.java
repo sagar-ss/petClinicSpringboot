@@ -1,14 +1,17 @@
 package com.sagar.pet_clinic.service;
 
 import com.sagar.pet_clinic.dto.AppointmentRequestDto;
+import com.sagar.pet_clinic.dto.AppointmentResponseDto;
 import com.sagar.pet_clinic.model.Appointment;
-import com.sagar.pet_clinic.model.Owner;
 import com.sagar.pet_clinic.repository.AppointmentRepository;
 import com.sagar.pet_clinic.repository.PetRepository;
 import com.sagar.pet_clinic.repository.VetRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AppointmentService {
@@ -27,44 +30,23 @@ public class AppointmentService {
         this.vetRepository = vetRepository;
     }
 
-
-
-
-
-    public ResponseEntity<?> createAppointment(AppointmentRequestDto requestDto) {
-        try{
+    public AppointmentResponseDto createAppointment(AppointmentRequestDto requestDto) {
                 validationService.validator(requestDto);
                 var appointment = appointmentMapper.toAppointment(requestDto);
                 Appointment savedAppointment = appointmentRepository.save(appointment);
-                return ResponseEntity.status(HttpStatus.OK).body(appointmentMapper.toAppointmentResponseDto(savedAppointment));
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+                return appointmentMapper.toAppointmentResponseDto(savedAppointment);
     }
 
-    public ResponseEntity<?> getAppointment(Integer id) {
-        try {
+    public AppointmentResponseDto getAppointment(Integer id) {
             var existingAppointment = appointmentRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Appointment Not found"));
-            return ResponseEntity.status(HttpStatus.OK).body(existingAppointment);
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return appointmentMapper.toAppointmentResponseDto(existingAppointment);
     }
 
 
-    public ResponseEntity<?> getAllAppointments() {
-        try {
+    public List<AppointmentResponseDto> getAllAppointments() {
             var listOfAppointments = appointmentRepository.findAll();
-            return ResponseEntity.status(HttpStatus.OK).body(listOfAppointments);
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return listOfAppointments.stream().map(appointmentMapper :: toAppointmentResponseDto).collect(Collectors.toList());
     }
 
 

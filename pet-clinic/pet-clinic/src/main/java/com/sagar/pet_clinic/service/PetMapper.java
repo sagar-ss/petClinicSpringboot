@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class PetMapper {
 
-    public PetResponseDto toPetResponseDto(Pet savedPet) {
-        PetResponseDto dto = new PetResponseDto(savedPet.getId());
+    public PetResponseDto toPetResponseDto(Pet pet) {
+        PetResponseDto dto = new PetResponseDto(pet.getId(),pet.getName(),pet.getBirthDate() );
         return dto;
     }
 

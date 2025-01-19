@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class VetMapper {
 
-    public VetResponseDto toVetResponseDto(Vet savedVet) {
-        VetResponseDto dto = new VetResponseDto(savedVet.getId());
+    public VetResponseDto toVetResponseDto(Vet vet) {
+        VetResponseDto dto = new VetResponseDto(vet.getId(), vet.getName(), vet.getSpecialization(),vet.getAddress());
         return dto;
     }
 

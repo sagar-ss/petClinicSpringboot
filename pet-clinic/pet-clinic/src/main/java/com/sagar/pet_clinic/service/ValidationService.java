@@ -22,6 +22,7 @@ public class ValidationService {
 
 
     public  void validator(AppointmentRequestDto requestDto){
+
             var existingVet = vetRepository.findById(requestDto.vet_id())
                     .orElseThrow(() -> new IllegalArgumentException("Vet not found"));
             var existingPet = petRepository.findById(requestDto.pet_id())

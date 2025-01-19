@@ -1,10 +1,15 @@
 package com.sagar.pet_clinic.service;
 
 import com.sagar.pet_clinic.dto.VetRequestDto;
+import com.sagar.pet_clinic.dto.VetResponseDto;
+import com.sagar.pet_clinic.model.Appointment;
 import com.sagar.pet_clinic.repository.VetRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class VetService {
@@ -18,91 +23,59 @@ public class VetService {
     }
 
     // CREATE VET
-    public ResponseEntity<?> createVet(VetRequestDto requestDto) {
-        try {
+    public VetResponseDto createVet(VetRequestDto requestDto) {
+
             var vet = vetMapper.toVet(requestDto);
             var savedVet = vetRepository.save(vet);
-            return ResponseEntity.status(HttpStatus.CREATED).body(vetMapper.toVetResponseDto(savedVet));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return vetMapper.toVetResponseDto(savedVet);
     }
 
     // UPDATE VET
-    public ResponseEntity<?> updateVet(VetRequestDto requestDto, Integer id) {
-        try {
+    public VetResponseDto updateVet(VetRequestDto requestDto, Integer id) {
             // Find the existing owner by ID
             var existingVet = vetRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Vet not found"));
-            if (requestDto.name() != null) {
+            if (!requestDto.name().isEmpty()) {
                 existingVet.setName(requestDto.name());
             }
-            if (requestDto.address()!= null) {
+            if (!requestDto.address().isEmpty()) {
                 existingVet.setAddress(requestDto.address());
             }
-            if (requestDto.specialization() != null) {
+            if (!requestDto.specialization().isEmpty()) {
                 existingVet.setSpecialization(requestDto.specialization());
             }
 
             var updatedVet = vetRepository.save(existingVet);
 
-            return ResponseEntity.status(HttpStatus.OK).body(vetMapper.toVetResponseDto(updatedVet));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return vetMapper.toVetResponseDto(updatedVet);
     }
 
     // GET VET
-    public ResponseEntity<?> getVet(Integer id) {
-        try {
+    public VetResponseDto getVet(Integer id) {
             var existingVet = vetRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Vet not found"));
-            return ResponseEntity.status(HttpStatus.OK).body(existingVet);
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return vetMapper.toVetResponseDto(existingVet);
     }
 
     // DELETE VET
-    public ResponseEntity<?> deleteVet(Integer id) {
-        try {
+    public void deleteVet(Integer id) {
             var existingVet = vetRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Vet not found"));
             vetRepository.delete(existingVet);
-            return ResponseEntity.status(HttpStatus.OK).build();
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+
     }
 
     // GET ALL VETS
-    public ResponseEntity<?> getAllVets() {
-        try {
+    public List<VetResponseDto> getAllVets() {
             var allVets = vetRepository.findAll();
-            return ResponseEntity.status(HttpStatus.OK).body(allVets);
-        }catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return allVets.stream().map(vetMapper :: toVetResponseDto).collect(Collectors.toList());
     }
 
     // GET ALL APPOINTMENT OF VET
-    public ResponseEntity<?> getAllAppointmentOfVet(Integer id) {
-        try {
+    public List<Appointment> getAllAppointmentOfVet(Integer id) {
             var existingVet = vetRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Vet not found"));
-            return ResponseEntity.status(HttpStatus.OK).body(existingVet.getAppointments());
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return existingVet.getAppointments();
 
     }
 }

@@ -1,122 +1,94 @@
 package com.sagar.pet_clinic.service;
 
 import com.sagar.pet_clinic.dto.OwnerRequestDto;
+import com.sagar.pet_clinic.dto.OwnerResponseDto;
+import com.sagar.pet_clinic.dto.OwnerUpdateRequestDto;
+import com.sagar.pet_clinic.dto.OwnerUpdateResponseDto;
 import com.sagar.pet_clinic.model.Owner;
+import com.sagar.pet_clinic.model.Pet;
 import com.sagar.pet_clinic.repository.OwnerRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
 public class OwnerService {
 
-    private final PetService petService;
-    private final AppointmentService appointmentService;
+
     private final OwnerRepository ownerRepository;
     private final OwnerMapper ownerMapper;
 
-    public OwnerService(PetService petService, AppointmentService appointmentService, OwnerRepository ownerRepository, OwnerMapper ownerMapper) {
-        this.petService = petService;
-        this.appointmentService = appointmentService;
+    public OwnerService(OwnerRepository ownerRepository, OwnerMapper ownerMapper) {
         this.ownerRepository = ownerRepository;
         this.ownerMapper = ownerMapper;
     }
 
     // CREATE OWNER
-    public ResponseEntity<?> createOwner(OwnerRequestDto requestDto) {
-        try {
-            var owner = ownerMapper.toOwner(requestDto);
-            var savedOwner = ownerRepository.save(owner);
-            return ResponseEntity.status(HttpStatus.CREATED).body(ownerMapper.toOwnerResponseDto(savedOwner));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public OwnerResponseDto createOwner(OwnerRequestDto requestDto) {
+        var owner = ownerMapper.toOwner(requestDto);
+        var savedOwner = ownerRepository.save(owner);
+        return ownerMapper.toOwnerResponseDto(savedOwner);
     }
-
 
     // UPDATE OWNER
-    public ResponseEntity<?> updateOwner(OwnerRequestDto requestDto, Integer id) {
-        try {
-            // Find the existing owner by ID
-            Owner existingOwner = ownerRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid owner_id"));
-            if (requestDto.firstName() != null) {
-                existingOwner.setFirstName(requestDto.firstName());
-            }
-            if (requestDto.lastName() != null) {
-                existingOwner.setLastName(requestDto.lastName());
-            }
-            if (requestDto.email() != null) {
-                existingOwner.setEmail(requestDto.email());
-            }
-            if (requestDto.telephone() != null) {
-                existingOwner.setTelephone(requestDto.telephone());
-            }
-
-            Owner updatedOwner = ownerRepository.save(existingOwner);
-
-            return ResponseEntity.status(HttpStatus.OK).body(ownerMapper.toOwnerResponseDto(updatedOwner));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    public OwnerUpdateResponseDto updateOwner(OwnerUpdateRequestDto requestDto, Integer id) {
+        // Find the existing owner by ID
+        Owner existingOwner = ownerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid owner_id: " + id));
+        if (!requestDto.firstName().isEmpty()) {
+            existingOwner.setFirstName(requestDto.firstName());
         }
+        if (!requestDto.lastName().isEmpty()) {
+            existingOwner.setLastName(requestDto.lastName());
+        }
+        if (!requestDto.email().isEmpty()) {
+            existingOwner.setEmail(requestDto.email());
+        }
+        if (!requestDto.telephone().isEmpty()) {
+            existingOwner.setTelephone(requestDto.telephone());
+        }
+        if (!requestDto.address().isEmpty()) {
+            existingOwner.setAddress(requestDto.address());
+        }
+        if (!requestDto.city().isEmpty()){
+            existingOwner.setCity(requestDto.city());
+        }
+            Owner updatedOwner = ownerRepository.save(existingOwner);
+        return ownerMapper.toOwnerUpdateResponseDto(updatedOwner);
+
     }
 
-
     // GET OWNER
-    public ResponseEntity<?> getOwner(Integer id){
-        try {
-            Owner existingOwner = ownerRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid owner_id"));
-            return ResponseEntity.status(HttpStatus.OK).body(existingOwner);
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public OwnerResponseDto getOwner(Integer id) {
+        Owner existingOwner = ownerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid owner_id: " + id));
+        return ownerMapper.toOwnerResponseDto(existingOwner);
     }
 
     // GET ALL OWNERS
 
-    public ResponseEntity<?> getAllOwners(){
-        try {
-            List<Owner> existingOwner = ownerRepository.findAll();
-            return ResponseEntity.status(HttpStatus.OK).body(existingOwner);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public List<OwnerResponseDto> getAllOwners() {
+
+        List<Owner> existingOwner = ownerRepository.findAll();
+        return existingOwner.stream().map(ownerMapper::toOwnerResponseDto).collect(Collectors.toList());
     }
 
     // DELETE OWNER
-    public ResponseEntity<?> deleteOwner(Integer id){
-        try {
-            Owner existingOwner = ownerRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid owner_id"));
-            ownerRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK).build();
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public void deleteOwner(Integer id) {
+        Owner existingOwner = ownerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid owner_id: " + id));
+        ownerRepository.deleteById(id);
+
     }
 
     // FIND ALL PETS OF A OWNER
-    public ResponseEntity<?> findAllPets(Integer id){
-        try {
-            Owner existingOwner = ownerRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid owner_id"));
-            return ResponseEntity.status(HttpStatus.OK).body(existingOwner.getPets());
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public List<Pet> findAllPets(Integer id) {
+        Owner existingOwner = ownerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid owner_id"));
+        return existingOwner.getPets();
+
     }
 
 }

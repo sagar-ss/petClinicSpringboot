@@ -1,12 +1,17 @@
 package com.sagar.pet_clinic.service;
 
 import com.sagar.pet_clinic.dto.PetRequestDto;
+import com.sagar.pet_clinic.dto.PetResponseDto;
+import com.sagar.pet_clinic.exception.ResourceNotFoundException;
 import com.sagar.pet_clinic.model.Owner;
+import com.sagar.pet_clinic.model.Pet;
 import com.sagar.pet_clinic.repository.OwnerRepository;
 import com.sagar.pet_clinic.repository.PetRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class PetService {
@@ -22,88 +27,55 @@ public class PetService {
     }
 
     // CREATE PET
-    public ResponseEntity<?> createPet(PetRequestDto requestDto) {
-        try {
+    public PetResponseDto createPet(PetRequestDto requestDto) {
 
             Owner existingOwner = ownerRepository.findById(requestDto.owner_id())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid owner_id"));
-
+                    .orElseThrow(() -> new ResourceNotFoundException("Invalid owner_id: "+requestDto.owner_id()));
             var pet = petMapper.toPet(requestDto);
             existingOwner.getPets().add(pet);
             var savedPet = petRepository.save(pet);
-            return ResponseEntity.status(HttpStatus.CREATED).body(petMapper.toPetResponseDto(savedPet));
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return petMapper.toPetResponseDto(savedPet);
     }
 
     // UPDATE PET
-    public ResponseEntity<?> updatePet(PetRequestDto requestDto, Integer id) {
-        try {
+    public PetResponseDto updatePet(PetRequestDto requestDto, Integer id) {
 
             var existingPet = petRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid pet_id"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Invalid pet_id: "+id));
 
-            if(requestDto.name()!=null){
+            if(!requestDto.name().isEmpty()){
                 existingPet.setName(requestDto.name());
             }
             if(requestDto.birthDate()!=null){
                 existingPet.setBirthDate(requestDto.birthDate());
             }
             var savedPet = petRepository.save(existingPet);
-            return ResponseEntity.status(HttpStatus.CREATED).body(petMapper.toPetResponseDto(savedPet));
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return petMapper.toPetResponseDto(savedPet);
     }
 
 
     // DELETE PET
-    public ResponseEntity<?> deletePet(Integer id) {
-        try {
+    public void deletePet(Integer id) {
             var existingPet = petRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Pet not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Invalid pet_id: "+id));
 
             existingPet.getOwner().getPets().remove(existingPet);
             petRepository.delete(existingPet);
-            return ResponseEntity.status(HttpStatus.OK).build();
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
     }
 
     // GET PET
-    public ResponseEntity<?> getPet(Integer id){
-        try {
+    public PetResponseDto getPet(Integer id){
             var existingPet = petRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Pet not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Invalid pet_id: "+ id));
 
-            return ResponseEntity.status(HttpStatus.OK).body(existingPet);
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return petMapper.toPetResponseDto(existingPet);
     }
 
 
-    public ResponseEntity<?> findAllPetsOfOwner(Integer ownerId) {
-        try {
-
+    public List<Pet> findAllPetsOfOwner(Integer ownerId) {
             Owner existingOwner = ownerRepository.findById(ownerId)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid owner_id"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Invalid owner_id: "+ownerId));
 
-            return ResponseEntity.status(HttpStatus.OK).body(existingOwner.getPets());
-        } catch ( IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return existingOwner.getPets();
     }
 }
